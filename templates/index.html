@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Todos</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+
+        <!-- Bootstrap CSS v5.2.1 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+        />
+
+        <style>
+            @media (min-width: 992px) {
+                .custom-card {
+                    width: 25%;
+                }
+            }
+            @media (max-width: 991.98px) {
+                .custom-card {
+                    width: 75%;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">
+                  <img src="https://play-lh.googleusercontent.com/mgP2xg49c4OgeLHTOT03n0BiXvaQWsykBTYabydJGsTiY_gOVerj5F-ZRhLZVJ51Grw" width="30" height="30" class="d-inline-block align-top" alt="Your Logo">
+                </a>
+                <div class="navbar-custom">
+                  <!-- Empty div for logo to stay left and items to stay right -->
+                  <ul class="navbar-nav float-right">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                  </ul>
+                </div>
+              </nav>
+              
+        </header>
+<main>
+
+    <div class="container mt-5">
+        <h3 class="text-center">To do List</h3>
+
+        <div class="card mt-5">
+            <div class="card-header">
+                Add Task
+            </div>
+            <div class="card-body">
+                <form id="add_task_form">
+                    <div class="mb-3">
+                        <label for="task" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="description" name="description"/>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning">Add</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                Task List
+            </div>
+
+            <div class="card-body p-5">
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Mark</th>
+                            <th>Task</th>
+                            <th>Description</th>
+                            <th>Status</th>
+                            <th class="w-25">Action</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+                        <!-- Data will be appended here -->
+
+                    </tbody>
+
+
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal (Edit Task) -->
+
+    <div class="modal" tabindex="-1" id="editModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit</h5>
+
+
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div>
+                        <input type="hidden" class="form-control"  id="editTaskID" name="task_id"/>
+
+                        <label for="task"  class="form-label">Task</label>
+                        <input type="text" class="form-control" id="editTitle" name="title"/>
+
+                        <label for="description" class="form-label">Description</label>
+                        <input type="text" class="form-control"  id="editDescription" name="description"/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-success " id="btnConfirmEdit">Update Task</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</main>
+<footer>
+    <!-- place footer here -->
+</footer>
+<!-- Bootstrap JavaScript Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js" integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+" crossorigin="anonymous"></script>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+<script>
+    $(document).ready(function () {
+    const apiUrl = "http://127.0.0.1:8000/api/todo";
+    const accessToken = localStorage.getItem("access_token");
+
+    if (!accessToken) {
+        window.location.href = "login";
+        return;
+    }
+
+    const fetchTasks = () => {
+        $.ajax({
+            type: "GET",
+            url: `${apiUrl}/get_tasks_by_id`,
+            headers: { Authorization: `Bearer ${accessToken}` },
+            success: renderTasks,
+            error: handleError
+        });
+    };
+
+    const renderTasks = (tasks) => {
+        tasks.forEach((task) => {
+            $("tbody").append(generateTaskHtml(task));
+        });
+    };
+
+
+
+    const generateTaskHtml = ({ id, title, description, status }) => {
+        const statusClass = status === 1 ? "bg-success" : "bg-danger";
+        const statusText = status === 1 ? "Done" : "Pending";
+        const checked = status === 1 ? "checked" : "";
+        return `
+            <tr>
+                <td>
+                    <input type="checkbox" data-status="${statusText}" data-task-id="${id}" name="mark" id="mark" ${checked} />
+                </td>
+                <td>${title}</td>
+                <td>${description}</td>
+                <td>
+                    <span class="badge ${statusClass}">${statusText}</span>
+                </td>
+                <td>
+                    <button class="btn btn-warning btn-edit" data-task-id="${id}" data-title="${title}" data-description="${description}" data-bs-toggle="modal" data-bs-target="#editModal">Edit</button>
+                    <button class="btn btn-danger btn-delete" data-task-id="${id}">Delete</button>
+                </td>
+            </tr>
+        `;
+    };
+
+    const handleError = (error) => {
+        console.error("AJAX error", error);
+    };
+
+    const handleAddTask = (e) => {
+        e.preventDefault();
+
+        const title = $("#title").val();
+        const description = $("#description").val();
+
+        $.ajax({
+            type: "POST",
+            url: `${apiUrl}/store`,
+            data: { title, description },
+            headers: { Authorization: `Bearer ${accessToken}` },
+            success: function (response) {
+                if (response.status === 201) {
+                    $("tbody").append(generateTaskHtml(response.todo));
+                    $("#title").val("");
+                    $("#description").val("");
+                }
+            },
+            error: handleError
+        });
+    };
+
+    const handleTaskStatusChange = function () {
+        const task_id = $(this).data("task-id");
+        let status = $(this).data("status");
+
+        const newStatus = status === "Done" ? 0 : 1;
+        const statusClass = newStatus === 1 ? "bg-success" : "bg-danger";
+        const statusText = newStatus === 1 ? "Done" : "Pending";
+
+
+        $(this).data("status", statusText);
+        $(this).closest("tr").find("span").removeClass().addClass(`badge ${statusClass}`).text(statusText);
+
+        $.ajax({
+            type: "POST",
+            url: `${apiUrl}/update_status`,
+            data: { id: task_id, status: newStatus },
+            headers: { Authorization: `Bearer ${accessToken}` },
+            success: console.log,
+            error: handleError
+        });
+    };
+
+    const handleDeleteClick = function () {
+        $(this).addClass("btn-confirm-delete").text("Confirm Delete?");
+    };
+
+    const handleConfirmDelete = function () {
+        const task_id = $(this).data("task-id");
+
+        $.ajax({
+            type: "POST",
+            url: `${apiUrl}/delete`,
+            data: { id: task_id },
+            headers: { Authorization: `Bearer ${accessToken}` },
+            success: function () {
+                $(`tr:has([data-task-id="${task_id}"])`).remove();
+                alert("Task Deleted");
+            },
+            error: handleError
+        });
+    };
+
+    const handleEditClick = function () {
+        const task_id = $(this).data("task-id");
+        const title = $(this).data("title");
+        const description = $(this).data("description");
+
+        $("#editTitle").val(title);
+        $("#editDescription").val(description);
+        $("#editTaskID").val(task_id);
+        $("#editModal").modal("show");
+    };
+
+    const handleEditConfirm = () => {
+        const task_id = $("#editTaskID").val();
+        const title = $("#editTitle").val();
+        const description = $("#editDescription").val();
+
+        $.ajax({
+            type: "POST",
+            url: `${apiUrl}/update`,
+            data: { id: task_id, title, description },
+            headers: { Authorization: `Bearer ${accessToken}` },
+            success: function () {
+                $(`tr:has([data-task-id="${task_id}"])`).find("td:eq(1)").text(title);
+                $(`tr:has([data-task-id="${task_id}"])`).find("td:eq(2)").text(description);
+                $("#editModal").modal("hide");
+            },
+            error: handleError
+        });
+    };
+
+    fetchTasks();
+
+    $("#add_task_form").submit(handleAddTask);
+    $("tbody").on("change", "#mark", handleTaskStatusChange);
+    $(document).on("click", ".btn-delete", handleDeleteClick);
+    $(document).on("click", ".btn-confirm-delete", handleConfirmDelete);
+    $(document).on("click", ".btn-edit", handleEditClick);
+    $("#btnConfirmEdit").click(handleEditConfirm);
+});
+
+</script>
+
+</body></html>

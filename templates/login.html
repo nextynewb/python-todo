@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <title>Login</title>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+
+        <!-- Bootstrap CSS v5.2.1 -->
+        <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+        />
+
+        <style>
+            @media (min-width: 992px) {
+                .custom-card {
+                    width: 25%;
+                }
+            }
+            @media (max-width: 991.98px) {
+                .custom-card {
+                    width: 75%;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <header>
+            <!-- place navbar here -->
+        </header>
+        <main>
+
+            <div class="container" style="margin-top: 100px;">
+                <div class="card custom-card mx-auto">
+                    <div class="card-header">
+                        Login
+                    </div>
+                    <div class="card-body">
+                        <form id="login_form">
+                      
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email</label>
+                                <input
+                                    type="email"
+                                    class="form-control"
+                                    id="email"
+                                    name="email"
+                                />
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input
+                                    type="password"
+                                    class="form-control"
+                                    id="password"
+                                    name="password"
+                                />
+                            </div>
+                            <div class="mb-2">
+                                <small>
+                                    Don't have an account? <a href="register">Register</a>
+                                </small>
+                            </div>
+
+                            <div class="mb-2">
+                                <small id="errorMessage" class="text-danger">
+                                </small>
+                            </div>
+                            <button type="submit" class="btn btn-warning float-right">Login</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+          
+        </main>
+        <footer>
+            <!-- place footer here -->
+        </footer>
+        <!-- Bootstrap JavaScript Libraries -->
+        <script
+            src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"
+            integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r"
+            crossorigin="anonymous"
+        ></script>
+
+        <script
+            src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+            integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+            crossorigin="anonymous"
+        ></script>
+
+        <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+
+        <script>
+            $(document).ready(function () {
+                var access_token = localStorage.getItem("access_token");
+
+                if (access_token) {
+                    window.location.href = "/index";
+                }
+
+
+                $("#login_form").submit(function (e) {
+                    e.preventDefault();
+                    var email = $("#email").val();
+                    var password = $("#password").val();
+
+                    $.ajax({
+                        url: "http://127.0.0.1:8000/api/login",
+                        type: "POST",
+                        data: {
+                            email: email,
+                            password: password,
+                        },
+                        success: function (response) {
+
+                            var status_code = response.status
+
+                            if(status_code == 401){
+                                $("#errorMessage").text("Invalid credentials");
+                            }
+
+                            else if(status_code == 200){
+                                alert("Successfully logged in");
+                                var access_token = response.access_token;
+                                var name = response.user.name;
+                                var email = response.user.email;
+                                localStorage.setItem("access_token", access_token)
+                                localStorage.setItem("name", name)
+                                localStorage.setItem("email", email)
+
+                                // Redirect to "/"
+                                window.location.href = "/index";
+                            }
+
+                        },
+                        error: function (error) {
+                            console.log(error);
+                            $("#errorMessage").text("Please check your Email format and password must be more than 5 characters");
+                        },
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
